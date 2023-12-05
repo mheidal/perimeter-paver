@@ -1,0 +1,9 @@
+{
+    "name": "spaceship-decorator",
+    "version": "0.0.1",
+    "title": "Spaceship Decorator",
+    "author": "notnotnaught",
+    "factorio_version": "1.1",
+    "dependencies": ["base >= 1.1", "space-exploration >= 0.0", "flib >= 0.12.9"],
+    "description": "Creates blueprints with tiles surrounding spaceship floor."
+  }

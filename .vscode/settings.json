@@ -1,0 +1,35 @@
+{
+    "factorio.versions": [
+        {
+            "name": "Steam",
+            "factorioPath": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Factorio\\bin\\x64\\factorio.exe",
+            "active": true
+        }
+    ],
+
+    "Lua.workspace.checkThirdParty": "ApplyInMemory",
+
+    "Lua.diagnostics.disable": [
+        "lowercase-global"
+    ],
+
+    "editor.tokenColorCustomizations": {
+        "[Default Dark+]": {
+			"textMateRules": [
+                {
+                    "scope": "keyword.operator",
+                    "settings": {
+                        "foreground": "#a892f7"
+                    }
+                },
+            ]
+
+        }
+    },
+    "Lua.workspace.library": [
+        "c:\\Program Files (x86)\\Steam\\steamapps\\common\\Factorio\\data"
+    ],
+    "Lua.workspace.userThirdParty": [
+        "c:\\Users\\Mike\\AppData\\Roaming\\Code\\User\\workspaceStorage\\2c09d20156d82dec220a629569976041\\justarandomgeek.factoriomod-debug\\sumneko-3rd"
+    ]
+}
