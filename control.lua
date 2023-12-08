@@ -28,8 +28,8 @@ local constants = {
         close_gui="close_gui",
     },
     gui_element_names={
-        main_frame="sd_main_frame",
-        layer_table="sd_layer_table", -- this one might be duplicated, but unique within configurations? Not sure
+        main_frame="pp_main_frame",
+        layer_table="pp_layer_table", -- this one might be duplicated, but unique within configurations? Not sure
     },
     settings_names={
         show_gui="sd-show-gui",
@@ -53,7 +53,7 @@ end
 ---@return boolean Whether the blueprint could be created
 function create_blueprint(player)
     if not player.is_cursor_blueprint() then
-        player.create_local_flying_text({create_at_cursor=true, text={"sd.must_have_blueprint_in_cursor"}})
+        player.create_local_flying_text({create_at_cursor=true, text={"pp.must_have_blueprint_in_cursor"}})
         return false
     end
     local cursor_stack = player.cursor_stack
@@ -74,7 +74,7 @@ function build_layer_table(player)
         gui.add(layer_table, {
             type="sprite-button",
             sprite="tile/" .. tile_layer,
-            tooltip={"sd.tile_layer_tooltip", tile_prototypes[tile_layer].localised_name},
+            tooltip={"pp.tile_layer_tooltip", tile_prototypes[tile_layer].localised_name},
             tags={tile_layer_index=i, tile=tile_layer},
             handler={[e.on_gui_click]=handlers.click_tile_layer}
         })
@@ -202,7 +202,7 @@ local function open_gui(player)
                 children={
                     {
                         type="label",
-                        caption={"sd.titlebar_caption"},
+                        caption={"pp.titlebar_caption"},
                         style="frame_title",
                     },
                     {
@@ -239,8 +239,8 @@ local function open_gui(player)
                         children={
                             {
                                 type="label",
-                                caption={"sd.choose_basis_tile"},
-                                tooltip={"sd.choose_basis_tile_tt"}
+                                caption={"pp.choose_basis_tile"},
+                                tooltip={"pp.choose_basis_tile_tt"}
                             },
                             {
                                 type="choose-elem-button",
@@ -252,7 +252,7 @@ local function open_gui(player)
                             {type="line"},
                             {
                                 type="label",
-                                caption={"sd.choose_surrounding_tiles"},
+                                caption={"pp.choose_surrounding_tiles"},
                             },
                             {
                                 type="frame",
@@ -278,8 +278,8 @@ local function open_gui(player)
                             {
                                 type="checkbox",
                                 state=per_player_settings[constants.settings_names.show_gui].value,
-                                caption={"sd.show_gui_checkbox"},
-                                tooltip={"sd.show_gui_checkbox_tt"},
+                                caption={"pp.show_gui_checkbox"},
+                                tooltip={"pp.show_gui_checkbox_tt"},
                                 handler={[e.on_gui_checked_state_changed]=handlers.toggle_show_gui}
                             },
                         },
@@ -302,7 +302,7 @@ local function open_gui(player)
                     {
                         type="button",
                         style="confirm_button",
-                        caption={"sd.create_blueprint"},
+                        caption={"pp.create_blueprint"},
                         handler={[e.on_gui_click]=handlers.create_blueprint_and_close_gui}
                     }
                 }
@@ -316,7 +316,7 @@ local function open_gui(player)
 end
 
 script.on_event(e.on_lua_shortcut, function(event)
-    if event.prototype_name ==  "sd_decorate_spaceship" then
+    if event.prototype_name ==  "pp_decorate" then
         local player = get_player(event)
         local per_player_settings = settings.get_player_settings(player)
         if per_player_settings[constants.settings_names.show_gui].value then

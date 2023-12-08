@@ -19,7 +19,7 @@ function Exports.create_blueprint(player, cursor_stack, basis_tile, tile_layers)
     local external_tiles = {}
     local old_blueprint_tiles = cursor_stack.get_blueprint_tiles()
     if not old_blueprint_tiles then
-        player.create_local_flying_text({create_at_cursor=true, text={"sd.blueprint_must_include_tiles"}})
+        player.create_local_flying_text({create_at_cursor=true, text={"pp.blueprint_must_include_tiles"}})
         return
     end
 
@@ -37,14 +37,6 @@ function Exports.create_blueprint(player, cursor_stack, basis_tile, tile_layers)
             end
         end
     end
-
-    -- tile_layers = {
-    --     "se-spaceship-floor",
-    --     "rough-stone-path",
-    --     "refined-hazard-concrete-left",
-    --     "concrete",
-    --     "refined-concrete",
-    -- }
 
     for i, tile_layer in pairs(tile_layers) do
         for _, tile in pairs(internal_tiles) do
@@ -73,7 +65,7 @@ function Exports.create_blueprint(player, cursor_stack, basis_tile, tile_layers)
     global.script_inventory.clear()
     local blueprint = global.script_inventory.find_empty_stack()
     if not blueprint then return end
-    blueprint.set_stack("sd_cursor_blueprint")
+    blueprint.set_stack("pp_cursor_blueprint")
     local new_blueprint_tiles = {}
     for _, ext in pairs(external_tiles) do
         local entity_number = #new_blueprint_tiles+1
