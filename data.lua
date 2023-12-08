@@ -10,11 +10,17 @@ data:extend{
   cursor_blueprint,
   {
     type="shortcut",
-    name="pp_decorate",
+    name="pp_use_tool",
     action="lua",
     icon=data_util.build_sprite(nil, {0, 0}, "__perimeter-paver__/graphics/star-dark-dashed-32.png", 32, 2), ---@todo add icon
     diabled_icon=data_util.build_sprite(nil, {48, 0}, "__perimeter-paver__/graphics/star-light-dashed-32.png", 32, 2),
     toggleable=true,
-    associated_control_input="pp_decorate"
-  }
+    associated_control_input="pp_use_tool"
+  },
+  {
+    type="custom-input",
+    name="pp_use_tool",
+    key_sequence="CONTROL + SHIFT + P",
+    order = "a"
+  },
 }

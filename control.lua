@@ -9,7 +9,7 @@ local blueprint_creation = require("scripts.blueprint_creation")
 ---@alias gui_element_name string
 ---@alias tile_name string
 
----@param event EventData.on_gui_checked_state_changed | EventData.on_gui_click | EventData.on_lua_shortcut | EventData.on_gui_closed | EventData.on_gui_opened | EventData.on_gui_elem_changed | EventData.on_gui_text_changed
+---@param event EventData.on_gui_checked_state_changed | EventData.on_gui_click | EventData.on_lua_shortcut | EventData.on_gui_closed | EventData.on_gui_opened | EventData.on_gui_elem_changed | EventData.on_gui_text_changed | EventData.CustomInputEvent | EventData.on_lua_shortcut
 ---@return LuaPlayer
 local function get_player(event)
     local player = game.players[event.player_index]
@@ -315,8 +315,10 @@ local function open_gui(player)
     main_frame.force_auto_center()
 end
 
-script.on_event(e.on_lua_shortcut, function(event)
-    if event.prototype_name ==  "pp_decorate" then
+---@param event EventData.on_lua_shortcut | EventData.CustomInputEvent
+local function handle_use_tool(event)
+    local name = event.prototype_name or event.input_name
+    if name == "pp_use_tool" then
         local player = get_player(event)
         local per_player_settings = settings.get_player_settings(player)
         if per_player_settings[constants.settings_names.show_gui].value then
@@ -325,7 +327,10 @@ script.on_event(e.on_lua_shortcut, function(event)
             create_blueprint(player)
         end
     end
-end)
+end
+
+script.on_event(e.on_lua_shortcut, handle_use_tool)
+script.on_event("pp_use_tool", handle_use_tool)
 
 script.on_event(e.on_gui_opened, function(event)
     local player = get_player(event)
