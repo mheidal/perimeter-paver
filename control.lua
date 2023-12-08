@@ -182,7 +182,7 @@ local function open_gui(player)
                 children={
                     {
                         type="label",
-                        caption="Tile Surrounder",
+                        caption={"sd.titlebar_caption"},
                         style="frame_title",
                     },
                     {
@@ -219,8 +219,8 @@ local function open_gui(player)
                         children={
                             {
                                 type="label",
-                                caption="Choose basis tile [img=info]",
-                                tooltip="The tile which the blueprint creator will surround with layers of selected tiles (below).\nIf not selected, then all pre-existing tiles will be considered as the basis."
+                                caption={"sd.choose_basis_tile"},
+                                tooltip={"sd.choose_basis_tile_tt"}
                             },
                             {
                                 type="choose-elem-button",
@@ -232,7 +232,7 @@ local function open_gui(player)
                             {type="line"},
                             {
                                 type="label",
-                                caption="Choose surrounding tiles",
+                                caption={"sd.choose_surrounding_tiles"},
                             },
                             {
                                 type="frame",
@@ -262,8 +262,8 @@ local function open_gui(player)
                             {
                                 type="checkbox",
                                 state=per_player_settings[constants.settings_names.show_gui].value,
-                                caption="Show this gui when creating blueprint [img=info]",
-                                tooltip="Can be re-enabled in mod settings",
+                                caption={"sd.show_gui_checkbox"},
+                                tooltip={"sd.show_gui_checkbox_tt"},
                                 handler={[e.on_gui_checked_state_changed]=handlers.toggle_show_gui}
                             },
                         },
@@ -286,7 +286,7 @@ local function open_gui(player)
                     {
                         type="button",
                         style="confirm_button",
-                        caption="Create blueprint",
+                        caption={"sd.create_blueprint"},
                         handler={[e.on_gui_click]=handlers.create_blueprint_and_close_gui}
                     }
                 }
