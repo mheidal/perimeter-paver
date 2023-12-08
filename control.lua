@@ -65,6 +65,7 @@ end
 
 ---@param player LuaPlayer
 function build_layer_table(player)
+    local tile_prototypes = game.tile_prototypes
     local pg = get_player_global(player)
     local layer_table = pg.gui_elements[constants.gui_element_names.layer_table]
     if not layer_table or not layer_table.valid then return end
@@ -73,6 +74,7 @@ function build_layer_table(player)
         gui.add(layer_table, {
             type="sprite-button",
             sprite="tile/" .. tile_layer,
+            tooltip={"sd.tile_layer_tooltip", tile_prototypes[tile_layer].localised_name},
             tags={tile_layer_index=i, tile=tile_layer},
             handler={[e.on_gui_click]=handlers.click_tile_layer}
         })
@@ -133,7 +135,7 @@ function handlers.add_tile_layer(event)
     local tile = element.elem_value ---@diagnostic disable-line Creation of gui element ensures this is a tile or nil
     if not tile then return end
 
-    pg.tile_layers[#pg.tile_layers] = tile
+    pg.tile_layers[#pg.tile_layers + 1] = tile
     element.elem_value = nil
     build_layer_table(player)
 
@@ -145,15 +147,33 @@ function handlers.click_tile_layer(event)
     local pg = get_player_global(player)
     local element = event.element
     if not element or not element.valid then return end
-    if event.button == defines.mouse_button_type.right then
-        if event.control then
-            table.remove(pg.tile_layers, element.tags.tile_layer_index)
-        else
-            ---@todo shift right
+    local left = event.button == defines.mouse_button_type.left
+    local right = event.button == defines.mouse_button_type.right
+    local ctrl = event.control
+    local shift = event.shift
+
+    local prev_index = element.tags.tile_layer_index
+    if not prev_index or type(prev_index) ~= "number" then return end
+
+    if right and ctrl and not shift then
+        table.remove(pg.tile_layers, prev_index)
+    else
+        local tile = element.tags.tile
+        local target_index
+        if right and not ctrl and not shift then
+            target_index = prev_index + 1
+        elseif right and not ctrl and shift then
+            target_index = #pg.tile_layers
+        elseif left and not ctrl and not shift then
+            target_index = prev_index > 1 and prev_index - 1 or 1
+        elseif left and not ctrl and shift then
+            target_index = 1
         end
-    elseif event.button == defines.mouse_button_type.left then
-        ---@todo shift left
+        if not target_index then return end
+        table.remove(pg.tile_layers, prev_index)
+        table.insert(pg.tile_layers, target_index, tile)
     end
+
     build_layer_table(player)
 end
 
@@ -236,12 +256,8 @@ local function open_gui(player)
                             },
                             {
                                 type="frame",
-                                style="filter_tabbe",
+                                style="slot_button_deep_frame",
                                 children={
-                                    {
-                                        type="frame",
-                                        style="slot_button_deep_frame"
-                                    },
                                     {
                                     type="table",
                                     column_count=8,
