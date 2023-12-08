@@ -1,12 +1,26 @@
 local gui = require("__flib__.gui-lite")
 local blueprint_creation = require("scripts.blueprint_creation")
 
----@param event EventData.on_gui_checked_state_changed | EventData.on_gui_click | EventData.on_lua_shortcut | EventData.on_gui_closed | EventData.on_gui_opened
+---@class PlayerGlobal
+---@field gui_elements {[gui_element_name]: LuaGuiElement?}
+---@field basis_tile tile_name?
+---@field tile_layers tile_name[]
+
+---@alias gui_element_name string
+---@alias tile_name string
+
+---@param event EventData.on_gui_checked_state_changed | EventData.on_gui_click | EventData.on_lua_shortcut | EventData.on_gui_closed | EventData.on_gui_opened | EventData.on_gui_elem_changed | EventData.on_gui_text_changed
 ---@return LuaPlayer
 local function get_player(event)
     local player = game.players[event.player_index]
     if not player then error("No such player") end
     return player
+end
+
+---@param player LuaPlayer
+---@return PlayerGlobal
+local function get_player_global(player)
+    return global.players[player.index]
 end
 
 local constants = {
@@ -15,6 +29,7 @@ local constants = {
     },
     gui_element_names={
         main_frame="sd_main_frame",
+        layer_table="sd_layer_table", -- this one might be duplicated, but unique within configurations? Not sure
     },
     settings_names={
         show_gui="sd-show-gui",
@@ -43,8 +58,33 @@ function create_blueprint(player)
     end
     local cursor_stack = player.cursor_stack
     if not cursor_stack or not cursor_stack.valid_for_read or not cursor_stack.can_set_stack() then return false end
-    blueprint_creation.create_blueprint(player, cursor_stack)
+    local pg = get_player_global(player)
+    blueprint_creation.create_blueprint(player, cursor_stack, pg.basis_tile, pg.tile_layers)
     return true
+end
+
+---@param player LuaPlayer
+function build_layer_table(player)
+    local pg = get_player_global(player)
+    local layer_table = pg.gui_elements[constants.gui_element_names.layer_table]
+    if not layer_table or not layer_table.valid then return end
+    layer_table.clear()
+    for i, tile_layer in pairs(pg.tile_layers) do
+        gui.add(layer_table, {
+            type="sprite-button",
+            sprite="tile/" .. tile_layer,
+            tags={tile_layer_index=i, tile=tile_layer},
+            handler={[e.on_gui_click]=handlers.click_tile_layer}
+        })
+    end
+    for _=1,(8-(#pg.tile_layers % 8)) do
+        gui.add(layer_table, {
+            type="empty-widget",
+            style_mods={
+                size=40
+            }
+        })
+    end
 end
 
 ---@param event EventData.on_gui_click
@@ -73,10 +113,55 @@ function handlers.toggle_show_gui(event)
     end
 end
 
+---@param event EventData.on_gui_elem_changed
+function handlers.choose_basis_tile(event)
+    local player = get_player(event)
+    local element = event.element
+    if not element or not element.valid then return end
+    ---@type tile_name?
+    local basis_tile = element.elem_value ---@diagnostic disable-line Creation of gui element ensures this is a tile or nil
+    get_player_global(player).basis_tile = basis_tile
+end
+
+---@param event EventData.on_gui_elem_changed
+function handlers.add_tile_layer(event)
+    local player = get_player(event)
+    local pg = get_player_global(player)
+    local element = event.element
+    if not element or not element.valid then return end
+    ---@type tile_name?
+    local tile = element.elem_value ---@diagnostic disable-line Creation of gui element ensures this is a tile or nil
+    if not tile then return end
+
+    pg.tile_layers[#pg.tile_layers] = tile
+    element.elem_value = nil
+    build_layer_table(player)
+
+end
+
+---@param event EventData.on_gui_click
+function handlers.click_tile_layer(event)
+    local player = get_player(event)
+    local pg = get_player_global(player)
+    local element = event.element
+    if not element or not element.valid then return end
+    if event.button == defines.mouse_button_type.right then
+        if event.control then
+            table.remove(pg.tile_layers, element.tags.tile_layer_index)
+        else
+            ---@todo shift right
+        end
+    elseif event.button == defines.mouse_button_type.left then
+        ---@todo shift left
+    end
+    build_layer_table(player)
+end
+
 ---@param player LuaPlayer
 local function open_gui(player)
-    local main_frame = global.players[player.index].gui_elements[constants.gui_element_names.main_frame]
-    if main_frame and main_frame.valid then return end
+    local pg = get_player_global(player)
+    local existing_main_frame = global.players[player.index].gui_elements[constants.gui_element_names.main_frame]
+    if existing_main_frame and existing_main_frame.valid then return end
 
     local per_player_settings = settings.get_player_settings(player)
 
@@ -120,7 +205,7 @@ local function open_gui(player)
                 -- body
                 type="frame",
                 direction="vertical",
-                style="deep_frame_in_shallow_frame",
+                style="inside_shallow_frame",
                 style_mods={
                     horizontally_stretchable=true,
                 },
@@ -132,6 +217,48 @@ local function open_gui(player)
                             margin=12,
                         },
                         children={
+                            {
+                                type="label",
+                                caption="Choose basis tile [img=info]",
+                                tooltip="The tile which the blueprint creator will surround with layers of selected tiles (below).\nIf not selected, then all pre-existing tiles will be considered as the basis."
+                            },
+                            {
+                                type="choose-elem-button",
+                                elem_type="tile",
+                                tile=pg.basis_tile,
+                                elem_filters={{filter="blueprintable",}},
+                                handler={[e.on_gui_elem_changed]=handlers.choose_basis_tile}
+                            },
+                            {type="line"},
+                            {
+                                type="label",
+                                caption="Choose surrounding tiles",
+                            },
+                            {
+                                type="frame",
+                                style="filter_tabbe",
+                                children={
+                                    {
+                                        type="frame",
+                                        style="slot_button_deep_frame"
+                                    },
+                                    {
+                                    type="table",
+                                    column_count=8,
+                                    name=constants.gui_element_names.layer_table,
+                                    }
+                                }
+                            },
+                            {
+                                type="choose-elem-button",
+                                elem_type="tile",
+                                elem_filters={{filter="blueprintable",}},
+                                handler={[e.on_gui_elem_changed]=handlers.add_tile_layer},
+                                style_mods={
+                                    top_margin=12,
+                                },
+                            },
+                            {type="line"},
                             {
                                 type="checkbox",
                                 state=per_player_settings[constants.settings_names.show_gui].value,
@@ -167,15 +294,16 @@ local function open_gui(player)
         }
     })
     player.opened = main_frame
-    main_frame.force_auto_center()
     global.players[player.index].gui_elements = elements
+    build_layer_table(player)
+    main_frame.force_auto_center()
 end
 
 script.on_event(e.on_lua_shortcut, function(event)
     if event.prototype_name ==  "sd_decorate_spaceship" then
         local player = get_player(event)
         local per_player_settings = settings.get_player_settings(player)
-        if per_player_settings[constants.settings_names.show_gui] then
+        if per_player_settings[constants.settings_names.show_gui].value then
             open_gui(player)
         else
             create_blueprint(player)
@@ -196,13 +324,20 @@ script.on_event(e.on_gui_closed, function(event)
     end
 end)
 
+---@return PlayerGlobal
+function get_new_player_global()
+    return {
+        gui_elements = {},
+        basis_tile=nil,
+        tile_layers={}
+    }
+end
+
 script.on_init(function ()
     global.script_inventory = game.create_inventory(10)
     global.players = {}
     for _, player in pairs(game.players) do
-        global.players[player.index] = {
-            gui_elements = {}
-        }
+        global.players[player.index] = get_new_player_global()
     end
 end)
 
