@@ -357,5 +357,29 @@ script.on_init(function ()
     end
 end)
 
+script.on_configuration_changed(function (config_changed_data)
+    if config_changed_data.mod_changes["perimeter-paver"] then
+        for _, player in pairs(game.players) do
+            local old_global = global.players[player.index]
+            local new_global = get_new_player_global()
+            for key, value in pairs(old_global) do
+                if type(value) == "table" then
+                    for subkey, subvalue in pairs(value) do
+                        if new_global[key] and new_global[key][subkey] ~= nil then
+                            new_global[key][subkey] = subvalue
+                        end
+                    end
+                else
+                    if new_global[key] then
+                        new_global[key] = value
+                    end
+                end
+            end
+            global.players[player.index] = new_global
+            close_gui(player)
+        end
+    end
+end)
+
 gui.add_handlers(handlers)
 gui.handle_events()
