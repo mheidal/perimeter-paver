@@ -30,6 +30,7 @@ local constants = {
     gui_element_names={
         main_frame="pp_main_frame",
         layer_table="pp_layer_table", -- this one might be duplicated, but unique within configurations? Not sure
+        basis_tile_label="pp_basis_layer_tile",
     },
     settings_names={
         show_gui="sd-show-gui",
@@ -70,7 +71,7 @@ function build_layer_table(player)
     local layer_table = pg.gui_elements[constants.gui_element_names.layer_table]
     if not layer_table or not layer_table.valid then return end
     layer_table.clear()
-    for i, tile_layer in pairs(pg.tile_layers) do
+    for i, tile_layer in ipairs(pg.tile_layers) do
         gui.add(layer_table, {
             type="sprite-button",
             sprite="tile/" .. tile_layer,
@@ -118,11 +119,14 @@ end
 ---@param event EventData.on_gui_elem_changed
 function handlers.choose_basis_tile(event)
     local player = get_player(event)
+    local pg = get_player_global(player)
     local element = event.element
     if not element or not element.valid then return end
     ---@type tile_name?
     local basis_tile = element.elem_value ---@diagnostic disable-line Creation of gui element ensures this is a tile or nil
-    get_player_global(player).basis_tile = basis_tile
+    pg.basis_tile = basis_tile
+    local tile_prototypes = game.tile_prototypes
+    pg.gui_elements[constants.gui_element_names.basis_tile_label].caption = pg.basis_tile and tile_prototypes[pg.basis_tile].localised_name or {"pp.no_selected_basis"}
 end
 
 ---@param event EventData.on_gui_elem_changed
@@ -161,15 +165,15 @@ function handlers.click_tile_layer(event)
         local tile = element.tags.tile
         local target_index
         if right and not ctrl and not shift then
-            target_index = prev_index + 1
+            target_index = math.min(#pg.tile_layers, prev_index + 1)
         elseif right and not ctrl and shift then
             target_index = #pg.tile_layers
         elseif left and not ctrl and not shift then
-            target_index = prev_index > 1 and prev_index - 1 or 1
+            target_index = math.max(1, prev_index - 1)
         elseif left and not ctrl and shift then
             target_index = 1
         end
-        if not target_index then return end
+        if not target_index or target_index == prev_index then return end
         table.remove(pg.tile_layers, prev_index)
         table.insert(pg.tile_layers, target_index, tile)
     end
@@ -180,6 +184,9 @@ end
 ---@param player LuaPlayer
 local function open_gui(player)
     local pg = get_player_global(player)
+
+    local tile_prototypes = game.tile_prototypes
+
     local existing_main_frame = global.players[player.index].gui_elements[constants.gui_element_names.main_frame]
     if existing_main_frame and existing_main_frame.valid then return end
 
@@ -243,11 +250,25 @@ local function open_gui(player)
                                 tooltip={"pp.choose_basis_tile_tt"}
                             },
                             {
-                                type="choose-elem-button",
-                                elem_type="tile",
-                                tile=pg.basis_tile,
-                                elem_filters={{filter="blueprintable",}},
-                                handler={[e.on_gui_elem_changed]=handlers.choose_basis_tile}
+                                type="flow",
+                                direction="horizontal",
+                                style_mods={
+                                    vertical_align="center",
+                                },
+                                children={
+                                    {
+                                        type="choose-elem-button",
+                                        elem_type="tile",
+                                        tile=pg.basis_tile,
+                                        elem_filters={{filter="blueprintable",}},
+                                        handler={[e.on_gui_elem_changed]=handlers.choose_basis_tile}
+                                    },
+                                    {
+                                        type="label",
+                                        name=constants.gui_element_names.basis_tile_label,
+                                        caption=pg.basis_tile and tile_prototypes[pg.basis_tile].localised_name or {"pp.no_selected_basis"},
+                                    },
+                                }
                             },
                             {type="line"},
                             {
@@ -257,6 +278,10 @@ local function open_gui(player)
                             {
                                 type="frame",
                                 style="slot_button_deep_frame",
+                                style_mods={
+                                    top_margin=12,
+                                    bottom_margin=12,
+                                },
                                 children={
                                     {
                                     type="table",
@@ -270,9 +295,6 @@ local function open_gui(player)
                                 elem_type="tile",
                                 elem_filters={{filter="blueprintable",}},
                                 handler={[e.on_gui_elem_changed]=handlers.add_tile_layer},
-                                style_mods={
-                                    top_margin=12,
-                                },
                             },
                             {type="line"},
                             {
