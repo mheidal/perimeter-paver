@@ -1,4 +1,4 @@
-## Train Limit Linter
+## Perimeter Paver
 
 This is a mod for the game [Factorio](https://factorio.com/). It is published on [the Factorio mod portal](https://mods.factorio.com/mod/perimeter-paver) in .zip format. The source code is visible on [the Github page](https://github.com/mheidal/perimeter-paver/).
 
