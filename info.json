@@ -1,9 +1,9 @@
 {
     "name": "perimeter-paver",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "title": "Perimeter Paver",
     "author": "notnotnaught",
     "factorio_version": "1.1",
-    "dependencies": ["base >= 1.1", "space-exploration >= 0.0", "flib >= 0.12.9"],
+    "dependencies": ["base >= 1.1", "flib >= 0.12.9"],
     "description": "Creates blueprints with tiles surrounding the perimeter of other tiles."
   }
